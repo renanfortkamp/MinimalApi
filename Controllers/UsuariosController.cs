@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.Context;
 using MinimalApi.Models.Entities;
+using MinimalApi.Models.Valid;
 
 namespace MinimalApi.Controllers
 {
@@ -76,10 +77,18 @@ namespace MinimalApi.Controllers
         [HttpPost]
         public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
         {
-            _context.UsuarioDbSet.Add(usuario);
+            var user = usuario;
+
+            var cpfValid = IsValid.IsValidCPF(usuario.Cpf);
+            if (cpfValid == false)
+            {
+                return BadRequest("Cpf Invalido! Você digitou letras!");
+            }        
+
+            _context.UsuarioDbSet.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUsuario", new { id = usuario.Id }, usuario);
+            return CreatedAtAction("GetUsuario", new { id = user.Id }, user);
         }
 
         // DELETE: api/Usuarios/5
