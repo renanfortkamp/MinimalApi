@@ -29,46 +29,38 @@ namespace MinimalApi.Controllers
             return await _context.UsuarioDbSet.ToListAsync();
         }
 
-        // GET: api/Usuarios/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Usuario>> GetUsuario(int id)
+        // GET: api/Usuarios/email&password
+        [HttpGet("{email}/{password}")]
+        public async Task<ActionResult<Usuario>> GetUsuario(string email, string password)
         {
-            var usuario = await _context.UsuarioDbSet.FindAsync(id);
+            var usuario = await _context.UsuarioDbSet.Where(u => u.Email == email && u.Password == password).FirstOrDefaultAsync();
 
             if (usuario == null)
             {
-                return NotFound();
+                return NotFound("Usuario não encontrado!");
             }
 
             return usuario;
         }
 
-        // PUT: api/Usuarios/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUsuario(int id, Usuario usuario)
+        // PUT: api/Usuarios/email&password
+        [HttpPut("{email}/{password}")]
+        public async Task<IActionResult> PutUsuario(string email,string password, [FromBody] Usuario usuario)
         {
-            if (id != usuario.Id)
+            var user = await _context.UsuarioDbSet.Where(u => u.Email == email && u.Password == password).FirstOrDefaultAsync();
+
+            if (user == null)
             {
-                return BadRequest();
+                return NotFound("Usuario não encontrado!");
             }
 
-            _context.Entry(usuario).State = EntityState.Modified;
+            user.Email = usuario.Email;
+            user.Password = usuario.Password;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UsuarioExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            _context.Entry(user).State = EntityState.Modified;
+
+            await _context.SaveChangesAsync();
+            
 
             return NoContent();
         }
@@ -91,25 +83,21 @@ namespace MinimalApi.Controllers
             return CreatedAtAction("GetUsuario", new { id = user.Id }, user);
         }
 
-        // DELETE: api/Usuarios/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUsuario(int id)
+        // DELETE: api/Usuarios/email&password
+        [HttpDelete("{email}/{password}")]
+        public async Task<IActionResult> DeleteUsuario(string email,string password)
         {
-            var usuario = await _context.UsuarioDbSet.FindAsync(id);
-            if (usuario == null)
+            var user = await _context.UsuarioDbSet.Where(u => u.Email == email && u.Password == password).FirstOrDefaultAsync();
+
+            if (user == null)
             {
-                return NotFound();
+                return NotFound("Usuario não encontrado!");
             }
 
-            _context.UsuarioDbSet.Remove(usuario);
+            _context.UsuarioDbSet.Remove(user);
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool UsuarioExists(int id)
-        {
-            return _context.UsuarioDbSet.Any(e => e.Id == id);
         }
     }
 }
