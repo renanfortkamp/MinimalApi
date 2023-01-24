@@ -29,7 +29,7 @@ namespace MinimalApi.Migrations
                 {
                     table.PrimaryKey("PK_UsuarioDbSet", x => x.Id);
                 });
-                migrationBuilder.Sql(
+            migrationBuilder.Sql(
                        "INSERT INTO UsuarioDbSet VALUES " +
                        "('renan', 'voilar','2014-10-29','11839750073','11-11111-1212','renan@hotmail.com','123456')," +
                        "('lorena', 'Simpson','1990-10-06','87812312312','48-99838-2131','Lorena@hotmail.com','123456')," +

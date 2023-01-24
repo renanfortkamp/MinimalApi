@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.Context;
+using MinimalApi.Models.Dto;
 using MinimalApi.Models.Entities;
 using MinimalApi.Models.Valid;
 
@@ -17,16 +19,22 @@ namespace MinimalApi.Controllers
     {
         private readonly MinimalApiContext _context;
 
-        public UsuariosController(MinimalApiContext context)
+        private readonly IMapper _mapper;
+
+        public UsuariosController(MinimalApiContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/Usuarios
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarioDbSet()
+        public async Task<ActionResult<IEnumerable<UsuarioGetDto>>> GetUsuarioDbSet()
         {
-            return await _context.UsuarioDbSet.ToListAsync();
+            var usuario = await _context.UsuarioDbSet.ToListAsync();
+            var userResponse = _mapper.Map<List<UsuarioGetDto>>(usuario);
+
+            return Ok(userResponse);
         }
 
         // GET: api/Usuarios/email&password
@@ -40,12 +48,14 @@ namespace MinimalApi.Controllers
                 return NotFound("Usuario não encontrado!");
             }
 
+            
+
             return usuario;
         }
 
         // PUT: api/Usuarios/email&password
         [HttpPut("{email}/{password}")]
-        public async Task<IActionResult> PutUsuario(string email,string password, [FromBody] Usuario usuario)
+        public async Task<IActionResult> PutUsuario(string email,string password, [FromBody] UsuarioPutDto usuarioPutDto)
         {
             var user = await _context.UsuarioDbSet.Where(u => u.Email == email && u.Password == password).FirstOrDefaultAsync();
 
@@ -54,33 +64,44 @@ namespace MinimalApi.Controllers
                 return NotFound("Usuario não encontrado!");
             }
 
-            user.Email = usuario.Email;
-            user.Password = usuario.Password;
+            user.Nome = usuarioPutDto.Nome;
+            user.SobreNome = usuarioPutDto.SobreNome;
+            user.DataNascimento = usuarioPutDto.DataNascimento;
+            user.Telefone = usuarioPutDto.Telefone;
+            user.Password = usuarioPutDto.Password;
 
             _context.Entry(user).State = EntityState.Modified;
 
             await _context.SaveChangesAsync();
             
 
-            return NoContent();
+            return Ok("Dados alterados com sucesso!");
         }
 
         // POST: api/Usuarios
         [HttpPost]
-        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
+        public async Task<ActionResult<UsuarioDto>> PostUsuario(UsuarioDto usuarioDto)
         {
-            var user = usuario;
-
-            var cpfValid = IsValid.IsValidCPF(usuario.Cpf);
+            var cpfValid = IsValid.IsValidCPF(usuarioDto.Cpf);
             if (cpfValid == false)
             {
                 return BadRequest("Cpf Invalido! Você digitou letras!");
-            }        
+            }
+            if (await _context.UsuarioDbSet.AnyAsync(p => p.Cpf == usuarioDto.Cpf))
+            {
+                return Conflict("Cpf já cadastrado!.");
+            }
+            if (await _context.UsuarioDbSet.AnyAsync(p => p.Email == usuarioDto.Email))
+            {
+                return Conflict("Email já cadastrado!.");
+            }
 
-            _context.UsuarioDbSet.Add(user);
+            var usuario = _mapper.Map<Usuario>(usuarioDto);
+
+            _context.UsuarioDbSet.Add(usuario);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUsuario", new { id = user.Id }, user);
+            return Ok(usuario);
         }
 
         // DELETE: api/Usuarios/email&password
@@ -97,7 +118,7 @@ namespace MinimalApi.Controllers
             _context.UsuarioDbSet.Remove(user);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok("Usuario Deletado com sucesso!");
         }
     }
 }

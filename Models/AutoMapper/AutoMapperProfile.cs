@@ -8,8 +8,9 @@ namespace MinimalApi.Models.AutoMapper
     {
         public AutoMapperProfile()
         {
-            CreateMap<Usuario, UsuarioDto>();
-            CreateMap<EmailPasswordDto, Usuario>();
+            CreateMap<UsuarioDto, Usuario>();
+            CreateMap<Usuario, UsuarioGetDto>();
+
         }
     }
 }
