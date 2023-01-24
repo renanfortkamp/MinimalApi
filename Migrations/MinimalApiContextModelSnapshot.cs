@@ -36,20 +36,21 @@ namespace MinimalApi.Migrations
                         .HasColumnType("nvarchar(11)");
 
                     b.Property<DateTime>("DataNascimento")
-                        .HasColumnType("Date");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Genero")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(18)
+                        .HasColumnType("nvarchar(18)");
 
                     b.Property<string>("SobreNome")
                         .IsRequired()
